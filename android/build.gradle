@@ -1,0 +1,120 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.3.0'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+
+    }
+}
+
+apply plugin: 'com.android.application'
+
+def nativeBuildSystem = 'cmake'
+def demoLibPath = '/working/siit/tensorflow/bazel-bin/tensorflow/examples/android/libtensorflow_demo.so'
+def inferenceLibPath = '/working/siit/tensorflow/bazel-bin/tensorflow/contrib/android/libtensorflow_inference.so'
+def bazelLocation = '/home/peerajak/bin/bazel'
+def cpuType = 'armeabi-v7a'
+def nativeOutDir = 'libs/' + cpuType
+def nativeDir = 'libs/'
+def nativeBuildRule = 'buildNativeBazel'
+
+
+task copyNativeLibs(type: Copy) {
+    from demoLibPath
+    from inferenceLibPath
+    into nativeOutDir
+    duplicatesStrategy = 'include'
+    dependsOn nativeBuildRule
+    fileMode 0644
+}
+
+tasks.whenTaskAdded { task ->
+    if (nativeBuildSystem == 'bazel' || nativeBuildSystem == 'makefile') {
+        if (task.name == 'assembleDebug') {
+            task.dependsOn 'copyNativeLibs'
+        }
+        if (task.name == 'assembleRelease') {
+            task.dependsOn 'copyNativeLibs'
+        }
+    }
+}
+
+task buildNativeBazel(type: Exec) {
+    workingDir '/working/siit/tensorflow'
+    commandLine bazelLocation, 'build', '-c', 'opt',  \
+         'tensorflow/examples/android:tensorflow_native_libs',  \
+         '--crosstool_top=//external:android/crosstool',  \
+         '--cpu=' + cpuType,  \
+         '--host_crosstool_top=@bazel_tools//tools/cpp:toolchain'
+}
+
+task buildNativeMake(type: Exec) {
+    environment "NDK_ROOT", android.ndkDirectory
+    // Tip: install ccache and uncomment the following to speed up
+    // builds significantly.
+    // environment "CC_PREFIX", 'ccache'
+    workingDir '/working/siit/tensorflow'
+    commandLine 'tensorflow/contrib/makefile/build_all_android.sh',  \
+         '-s',  \
+         'tensorflow/contrib/makefile/sub_makefiles/android/Makefile.in',  \
+         '-t',  \
+         'libtensorflow_inference.so libtensorflow_demo.so'  \
+         //, '-T'  // Uncomment to skip protobuf and speed up subsequent builds.
+}
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+
+    lintOptions {
+        abortOnError false
+    }
+    if (nativeBuildSystem == 'cmake') {
+        defaultConfig {
+            applicationId = 'org.tensorflow.demo'
+            minSdkVersion 21
+            targetSdkVersion 23
+            ndk {
+                abiFilters "${cpuType}"
+            }
+            externalNativeBuild {
+                cmake {
+                    arguments '-DANDROID_TOOLCHAIN=gcc', '-DANDROID_STL=gnustl_static'
+                }
+            }
+        }
+    }
+        externalNativeBuild {
+            cmake {
+                path './jni/CMakeLists.txt'
+            }
+        }
+    sourceSets {
+        main {
+            java {
+                srcDir 'src'
+            }
+
+            manifest.srcFile 'AndroidManifest.xml'
+            resources.srcDirs = ['src']
+            aidl.srcDirs = ['src']
+            renderscript.srcDirs = ['src']
+            res.srcDirs = ['res']
+            assets.srcDirs = ['assets']
+            jniLibs.srcDirs = ['libs']
+
+        }
+    }
+    dependencies {
+        if (nativeBuildSystem == 'cmake' || nativeBuildSystem == 'none') {
+            compile 'org.tensorflow:tensorflow-android:1.2.0'
+        }
+    }
+}

@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "/home/peerajak/AndroidStudioProjects/tensorflow-style-transfer-android-codelab-start/android/build/intermediates/res/merged/debug/drawable-hdpi/tile.9.png",
+        "source": "/home/peerajak/AndroidStudioProjects/tensorflow-style-transfer-android-codelab-start/android/res/drawable-hdpi/tile.9.png"
+    },
+    {
+        "merged": "/home/peerajak/AndroidStudioProjects/tensorflow-style-transfer-android-codelab-start/android/build/intermediates/res/merged/debug/drawable-hdpi/ic_launcher.png",
+        "source": "/home/peerajak/AndroidStudioProjects/tensorflow-style-transfer-android-codelab-start/android/res/drawable-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/home/peerajak/AndroidStudioProjects/tensorflow-style-transfer-android-codelab-start/android/build/intermediates/res/merged/debug/drawable-hdpi/ic_action_info.png",
+        "source": "/home/peerajak/AndroidStudioProjects/tensorflow-style-transfer-android-codelab-start/android/res/drawable-hdpi/ic_action_info.png"
+    }
+]
